@@ -1,252 +1,189 @@
 #include "types.h"
-#include "stat.h"
 #include "user.h"
-#include "fs.h"
+#include "stat.h"
 #include "fcntl.h"
+#include "fs.h"
 
-void mv_rek(char *from,char *to);
-
-char* fmtname(char *path)
+char* strcat(char *target, char *source)
 {
-  static char buf[512];
-  char *p;
-  for(p = path + strlen(path); p >= path && *p != '/'; p--);
-  p++;
-  memmove(buf, p, strlen(p));
-  return buf;
-}
-
-char* strcat(char *d, char *s)
-{
-  char *temp = d;
-  while(*d) 
-    ++d;
-  while(*s) 
-    *d++ = *s++;
+  char *temp = target;
+  while(*target) 
+    ++target;
+  while(*source) 
+    *target++ = *source++;
   
-  *d = 0;
+  *target = 0;
   return temp;
 }
 
-void move(char *from, char *to)
+char *getFileName(char *s) 
 {
-  struct stat st;
-  char *buf;
-  buf = (char*)malloc(512 * sizeof(char));
-  int fd0;
+	char *filename = s;
+	char *temp = s;
+	int i;
 
-  if ((fd0 = open(from, O_RDONLY)) < 0)
+	for (i = strlen(temp); i >= 0; i--) 
   {
-    printf(2,"mv: cannot open '%s' No such file or directory\n",from);
-    exit();
-  }
-
-  if(fstat(fd0,&st) >= 0)
-  {
-    if(st.type == T_DIR)
+		if (temp[i] == '/') 
     {
-      printf(1, "cannot move directory\n", from, to);
-      
-      // printf(1, "mv %s to %s\n", from, to);
-      // mv_rek(from, to);
-      exit();
-    }
-  }
+			filename = &temp[i + 1];
+			break;
+		}
+	}
 
-  int fd1;
-  char *temp;
-  temp = (char*)malloc(512 * sizeof(char));
-  if (to[strlen(to)-1] == '/') 
-    to[strlen(to)-1] = 0;
-  // OPEN FILE TO
-  fd1 = open(to, 0);
-
-  // JIKA ADALAH DIREKTORI
-  if(fstat(fd1, &st)>=0 && st.type == T_DIR)
-  {
-    strcat(temp, to);
-    strcat(temp, "/");
-    strcat(temp, from);
-    close(fd1);
-    if((fd1 = open(temp, O_CREATE | O_WRONLY)) < 0)
-    {
-      printf(2, "mv: error while create '%s'\n",temp);
-      exit();
-    }
-  }
-  // JIKA ADALAH FILE
-  else
-  {
-    close(fd1);
-    if((fd1 = open(to, O_CREATE | O_WRONLY)) < 0)
-    {
-      printf(2,"mv: error while create '%s'\n",to);
-      exit();
-    }
-  }
-
-  int n;
-  while((n = read(fd0, buf, sizeof(buf))) > 0)
-    printf(fd1,"%s", buf);
-
-  close(fd1);
-  free(temp);
-  free(buf);
-  unlink(from);
+	return filename;
 }
 
-void mv_ls(char *path,int panjang,char *ekstensi)
+int isDirectory(char *s) 
 {
-  char *buff;
-  buff = (char*)malloc(512*sizeof(char*));
-  int fd0, fd1;
-  struct dirent de;
-  struct stat st;
-  if(path[strlen(path)-1]=='/') 
-    path[strlen(path)-1]=0;
+	struct stat st;
 
-  if((fd0=open(".",0))<0)
-  {
-    printf(2,"mv: cannot open '\".\"' No such file or directory\n");
-    exit();
-  }
+	int fd = open(s, O_RDONLY);
+	fstat(fd, &st);
+	int is_directory;
 
-  if((fd1=open(path,O_RDONLY))<0)
+	if (st.type == T_DIR) 
+		is_directory = 1;
+	else
+		is_directory = 0;
+
+	close(fd);
+	return is_directory;
+}
+
+void move_file(char *source, char *target) 
+{
+
+	char *newtarget = (char *) malloc(strlen(getFileName(source)) + strlen(target) + 2);
+	strcpy(newtarget, target);
+
+	if (isDirectory(target)) 
   {
-    printf(2,"~mv: cannot open '%s' No such file or directory\n", path);
-    exit();
-  }
-  if(fstat(fd1,&st)<0)
+		if (target[strlen(target) - 1] != '/') 
+      strcat(newtarget, "/");
+
+		strcat(newtarget, getFileName(source));
+	} 
+  else if (target[strlen(target) - 1] == '/') 
   {
-    printf(2,"mv: cannot stat '%s' No such file or directory\n", path);
-    exit();
-  }
-  else
+		printf(1, "mv: %s is not a directory\n", target);
+		return;
+	}
+
+	int fs;
+	if ((fs = open(source, O_RDONLY)) < 0) 
   {
-    if(st.type!=T_DIR)
+		printf(1, "mv: cannot open %s\n", source);
+		return;
+	}
+
+  int fd;
+	if ((fd = open(newtarget, O_CREATE | O_RDWR)) < 0) 
+  {
+		printf(1, "mv: cannot open %s\n", target);
+		return;
+	}
+
+	int fb;
+  char buffer[512];
+	while ((fb = read(fs, buffer, sizeof(buffer))) > 0) 
+		write(fd, buffer, fb);
+
+	close(fs);
+	close(fd);
+
+	unlink(source);
+}
+
+void move_dir(char *source, char *target) 
+{
+
+	int fd;
+	if((fd = open(source, 0)) < 0)
+  {
+		printf(2, "mv: cannot open %s\n", source);
+		return;
+	}
+
+  char bufdir[512];
+	strcpy(bufdir, target);
+	if (target[strlen(target)-1] != '/') 
+    strcat(bufdir, "/");
+	
+  strcat(bufdir, getFileName(source));
+
+	if (mkdir(bufdir) < 0) 
+  {
+		mkdir(target);
+		strcpy(bufdir, target);
+	}
+
+	char buffer[512];
+	strcpy(buffer, source);
+
+  char *p;
+	p = buffer + strlen(buffer);
+	*p = '/';
+	p++;
+
+	struct dirent de;
+	while(read(fd, &de, sizeof(de)) == sizeof(de)) 
+  {
+		if(de.inum == 0 || !strcmp(de.name, ".") || !strcmp(de.name, ".."))
+			continue;
+
+		memmove(p, de.name, strlen(de.name));
+		p[strlen(de.name)] = 0;
+
+		if (isDirectory(buffer))
+			move_dir(buffer, bufdir);
+		else
+			move_file(buffer, bufdir);
+	}
+
+	close(fd);
+
+	unlink(source);
+}
+
+void move_one(char *source, char *target) 
+{
+	if (isDirectory(source))
+		move_dir(source, target);
+	else
+		move_file(source, target);
+}
+
+void move_all(char *target) 
+{
+  move_dir(".", target);
+}
+
+int main(int argc, char *argv[]) {
+	if (argc < 2) 
+  {
+		printf(1, "mv: missing file operand\n");
+		exit();
+	} 
+  else if (argc < 3) 
+  {
+		printf(1, "mv: missing destination file operand after '%s'\n", argv[1]);
+		exit();
+	}
+
+	if (!strcmp(argv[1], "*"))
+		move_all(argv[2]);
+	else
+  {
+    if (argc > 3 && !isDirectory(argv[argc - 1]))
     {
-      printf(2,"mv: '%s' is not directory\n", path);
+		  printf(2, "mv: target '%s' is not a directory\n", argv[argc - 1]);
       exit();
     }
-  }
-  // tidak perlu switch karena sudah pasti masuk ke direktori
-  strcat(buff, path);
-  strcat(buff, "/");
-  int len = strlen(buff);
-  while(read(fd0,&de,sizeof(de)) == sizeof(de))
-  {
-    if(de.inum==0) 
-      continue;
-    if(de.name[0]=='.')
-      continue;
-    if(stat(de.name, &st) >= 0 && st.type == T_DIR) 
-      continue;
-    
-    memmove(buff  +len, de.name, strlen(de.name));
-    move(de.name, buff);
-    memset(buff + len, '\0', sizeof(buff) + len);
-  }
-  free(buff);
-  close(fd0);
-}
 
-void mv_rek(char *from,char *to)
-{
-  char *buff;
-  buff=(char*)malloc(512 * sizeof(char*));
-  int fd0;
-  struct dirent de;
-  struct stat st;
-  
-  if (from[strlen(from) - 1] == '/') 
-    from[strlen(from) - 1] = 0;
-  if (to[strlen(to) - 1] == '/') 
-    to[strlen(to) - 1] = 0;
-  
-  printf(1, "%s\n", to);
-  
-  if((fd0=open(from,0))<0)
-  {
-    printf(2,"mv: cannot open '%s' No such file or directory\n",from);
-    exit();
+    for (int i = 1; i < argc - 1; i++)
+		  move_one(argv[i], argv[argc - 1]);
   }
 
-  if(fstat(fd0, &st)<0)
-  {
-    printf(2,"mv: cannot stat '%s' No such file or directory\n",from);
-    exit();
-  }
-  char *temp, *temp2;
-  temp = (char*)malloc(512*sizeof(char*));
-  temp2 = (char*)malloc(512*sizeof(char*));
-  switch(st.type)
-  {
-    case T_FILE:
-    {
-      move(from,to);
-      break;
-    }
-    case T_DIR:
-    {
-      strcpy(buff,to);
-      strcat(buff,"/");
-      strcat(buff,from);
-      if(mkdir(to)>=0)
-      {
-        while (read(fd0,&de,sizeof(de)) == sizeof(de))
-        {
-          if (de.inum==0 || de.name[0]=='.') 
-            continue;
-
-          strcpy(temp, from);
-          strcat(temp, "/");
-          strcat(temp, de.name);
-          strcpy(temp2, to);
-          strcat(temp2, "/");
-          strcat(temp2, de.name);
-          mv_rek(temp, temp2);
-        }
-      }
-      else
-      {
-        while (read(fd0,&de,sizeof(de))==sizeof(de))
-        {
-          if (de.inum == 0 || de.name[0] == '.') 
-            continue;
-
-          strcpy(temp, from);
-          strcat(temp, "/");
-          strcat(temp, de.name);
-          strcpy(temp2, buff);
-          strcat(temp2, "/");
-          strcat(temp2, de.name);
-          mv_rek(temp, temp2);
-        }
-        unlink(temp);
-      }
-      unlink(to);
-      break;
-    }
-  }
-  close(fd0);
-  free(temp);
-  free(temp2);
-  free(buff);
-}
-
-int main(int argc,char *argv[])
-{
-  if(argc<2)
-    printf(2,"Usage : mv [source] [dest]\n");
-  else if(strcmp(argv[1],"*")==0)
-  {
-    mv_rek(".", argv[2]);
-    exit();
-  }
-  else
-  {
-    move(argv[1],argv[2]);
-    exit();
-  }
-  exit();
+	exit();
 }

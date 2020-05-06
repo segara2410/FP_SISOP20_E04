@@ -187,8 +187,8 @@ UPROGS=\
 	_pwd\
 	_zombie\
 
-fs.img: mkfs README TES1 TES2 TES3 $(UPROGS)
-	./mkfs fs.img README TES1 TES2 TES3 $(UPROGS)
+fs.img: mkfs README.md TES1 TES2 TES3 $(UPROGS)
+	./mkfs fs.img README.md TES1 TES2 TES3 $(UPROGS)
 
 -include *.d
 
@@ -201,7 +201,7 @@ clean:
 
 # make a printout
 FILES = $(shell grep -v '^\#' runoff.list)
-PRINT = runoff.list runoff.spec README TES1 TES2 TES3 toc.hdr toc.ftr $(FILES)
+PRINT = runoff.list runoff.spec README.md TES1 TES2 TES3 toc.hdr toc.ftr $(FILES)
 
 xv6.pdf: $(PRINT)
 	./runoff
@@ -256,7 +256,7 @@ EXTRA=\
 	mkfs.c ulib.c user.h cat.c echo.c forktest.c grep.c kill.c\
 	ln.c ls.c mkdir.c rm.c stressfs.c usertests.c wc.c head.c pwd.c fold.c zombie.c\
 	printf.c umalloc.c mv.c cp.c\
-	README TES1 TES2 TES3 dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
+	README.md TES1 TES2 TES3 dot-bochsrc *.pl toc.* runoff runoff1 runoff.list\
 	.gdbinit.tmpl gdbutil\
 
 dist:
