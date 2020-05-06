@@ -4,7 +4,7 @@
 
 char buf[512];
 
-void fold(int fd, char *name, int count)
+void fold(int fd, int count)
 {
   int n;
   int c = 0;
@@ -45,12 +45,11 @@ int main(int argc, char *argv[])
   int i;
   int fd = 0;
   int x = 100;
-  char *file = "";
   char a;
 
   if (argc <= 1) 
   {	
-    fold(0, "", 100);
+    fold(0, 100);
     exit();
   }
 
@@ -84,7 +83,7 @@ int main(int argc, char *argv[])
       }
     }
   
-    fold(fd, file, x);
+    fold(fd, x);
     close(fd);
     exit();
   }

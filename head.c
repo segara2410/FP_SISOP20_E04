@@ -5,7 +5,7 @@
 char buf[512];
 int q = 1;
 
-void head(int fd, char *name, int line)
+void head(int fd, int line)
 {
   int n;
   int l = 1;
@@ -38,14 +38,14 @@ void head(int fd, char *name, int line)
   }
 }
 
-void headQ(int fd, char *name)
+void headQ(int fd)
 {
   int n;
 
   while ((n = read(fd, buf, sizeof(buf))) > 0 )
   {
     for (int i = 0; i <= n; i++)
-    {				
+    {
       if (buf[i] != '\n')
       	printf(1,"%c",buf[i]);
       
@@ -72,7 +72,7 @@ void headQ(int fd, char *name)
   }
 }
 
-void headByte(int fd, char *name, int byte)
+void headByte(int fd, int byte)
 {
   int n;
   int b = 0;
@@ -102,11 +102,10 @@ int main(int argc, char *argv[])
 {
   int fd = 0;
   int x = 10;
-  char *file = "";
 
   if (argc <= 1) 
   {	
-    head(0, "", 10);
+    head(0, 10);
     exit();
   }
 
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
           exit();
         }
 
-        head(fd, file, x);
+        head(fd, x);
       }
       else if (argv[1][1] == 'c')
       {
@@ -134,7 +133,7 @@ int main(int argc, char *argv[])
           exit();
         }
 
-        headByte(fd, file, x);
+        headByte(fd, x);
       }
       else if (argv[1][1] == 'q')
       {
@@ -147,7 +146,7 @@ int main(int argc, char *argv[])
             exit();
           }
 
-          headQ(fd, file);
+          headQ(fd);
           i++;
         }
       }
@@ -162,11 +161,11 @@ int main(int argc, char *argv[])
           exit();
         }
 
-        head(fd, file, x);
+        head(fd, x);
       }
     }
 
-    head(fd, file, x);
+    head(fd, x);
     close(fd);
     exit();    
 
