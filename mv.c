@@ -64,11 +64,6 @@ void move_file(char *source, char *target)
 
     strcat(newtarget, getFileName(source));
   } 
-  else if (target[strlen(target) - 1] == '/') 
-  {
-    printf(1, "mv: %s is not a directory\n", target);
-    return;
-  }
 
   int fs;
   if ((fs = open(source, O_RDONLY)) < 0) 
@@ -162,12 +157,12 @@ void move_all(char *target)
 int main(int argc, char *argv[]) {
   if (argc < 2) 
   {
-    printf(1, "mv: missing file operand\n");
+    printf(2, "mv: missing file operand\n");
     exit();
   } 
   else if (argc < 3) 
   {
-    printf(1, "mv: missing destination file operand after '%s'\n", argv[1]);
+    printf(2, "mv: missing destination file operand after '%s'\n", argv[1]);
     exit();
   }
 

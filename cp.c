@@ -63,24 +63,19 @@ void copy_file(char *source, char *target)
       strcat(newtarget, "/");
 
     strcat(newtarget, getFileName(source));
-  } 
-  else if (target[strlen(target) - 1] == '/') 
-  {
-    printf(1, "mv: %s is not a directory\n", target);
-    return;
   }
 
   int fs;
   if ((fs = open(source, O_RDONLY)) < 0) 
   {
-    printf(1, "mv: cannot open %s\n", source);
+    printf(1, "cp: cannot open %s\n", source);
     return;
   }
 
   int fd;
   if ((fd = open(newtarget, O_CREATE | O_RDWR)) < 0) 
   {
-    printf(1, "mv: cannot open %s\n", target);
+    printf(1, "cp: cannot open %s\n", target);
     return;
   }
 
@@ -159,12 +154,12 @@ int main(int argc, char *argv[])
 
   if (argc < 2) 
   {
-    printf(1, "help..\n");
+    printf(2, "cp: missing file operand\n");
     exit();
   } 
   else if (argc < 3) 
   {
-    printf(1, "cp: missing destination file operand after %s\n", argv[1]);
+    printf(2, "cp: missing destination file operand after %s\n", argv[1]);
     exit();
   }
 
