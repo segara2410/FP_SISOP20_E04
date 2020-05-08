@@ -12,14 +12,14 @@ void head(int fd, int line)
 
   while ((n = read(fd, buf, sizeof(buf))) > 0 )
   {
-    for(int i = 0; i <= n; i++)
+    for(int i = 0; i < n; i++)
     {				
       if (buf[i] != '\n')
-      	printf(1,"%c",buf[i]);
+      	printf(1, "%c", buf[i]);
       
       else if (l == line)
       {
-        printf(1,"\n");	
+        printf(1, "\n");	
         exit();
       }
 
@@ -80,7 +80,7 @@ void headByte(int fd, int byte)
   {
     for (int i = 0; i <= n; i++)
     {
-      printf(1,"%c",buf[i]);
+      printf(1, "%c", buf[i]);
       b++;
       if (b == byte)
       {
@@ -108,7 +108,15 @@ int main(int argc, char *argv[])
     head(0, 10);
     exit();
   }
-
+  else if (argc == 2)
+  {
+    if ((fd = open(argv[1], 0)) < 0) 
+    {
+      printf(1, "head: cannot open %s\n", argv[1]);
+      exit();
+    }
+    head(fd, x);
+  }
   else 
   {
     if (argv[1][0] == '-')

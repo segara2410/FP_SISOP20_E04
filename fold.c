@@ -11,29 +11,30 @@ void fold(int fd, int count)
 
   while((n = read(fd, buf, sizeof(buf))) > 0 )
   {
-    for(int i=0; i<=n ;i++)
+    for(int i = 0; i < n; i++)
     {				
-      if (buf[i]!='\n')
+      if (buf[i] != '\n')
       {			
-      	printf(1,"%c",buf[i]);
+      	printf(1, "%c", buf[i]);
         c++;
       }
       else
       {
-      	printf(1,"\n");
+      	printf(1, "\n");
       	c = 0;
       } 
 
       if (c == count)
       {
-      	printf(1,"\n");
+      	printf(1, "\n");
         c = 0;
       }
     }
   }
-  printf(1,"\n");
+  printf(1, "\n");
 
-  if(n < 0){
+  if(n < 0)
+  {
     printf(1, "fold: read error\n");
     exit();
   }
@@ -44,12 +45,12 @@ int main(int argc, char *argv[])
 {
   int i;
   int fd = 0;
-  int x = 100;
+  int x = 80;
   char a;
 
   if (argc <= 1) 
   {	
-    fold(0, 100);
+    fold(0, x);
     exit();
   }
 
