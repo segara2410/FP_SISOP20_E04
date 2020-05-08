@@ -20,6 +20,8 @@ void fold(int fd, int count)
       }
       else
       {
+        if (c == 0)
+          continue;
       	printf(1, "\n");
       	c = 0;
       } 
